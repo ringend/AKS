@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webserver-1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webserver-1
+  template:
+    metadata:
+      labels:
+        app: webserver-1
+    spec:
+      nodeSelector:
+        "beta.kubernetes.io/os": linux
+      containers:
+      - name: webserver-1
+        image: ringend/web-server2
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+        ports:
+        - containerPort: 8080
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webserver-1
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+spec:
+  type: LoadBalancer
+  ports:
+  - name: http
+# port = port loadbalancer exposes
+    port: 80
+# targetPort = port container exposes
+    targetPort: 8080
+  selector:
+    app: webserver-1
+
