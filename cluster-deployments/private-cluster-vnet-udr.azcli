@@ -1,0 +1,31 @@
+# VNet Intergration, Prive Endpoint for API, Public DNS, with UDR for egress traffic.
+# Worker nodes will be deployed in "vnet-subnet-id".
+	• --resource-group = Existing resource group
+	• --service-cidr = Cannot overlap within the Vnet or cluster (include pod-cidr).  It can be reused for other clusters
+	• --dns-service-ip = Has to be x.10 of service-cidr
+	• --pod-cidr = Something unique in the enterprise, can be reused for other clusters.   It is routed in the subnet, but not across the enterprise.
+	• --docker-bridge-address = Something unique in the enterprise, can be reused for other pods.
+	• --vnet-subnet-id  = Existing subnet in Vnet, where work nodes will be deployed.
+	• --service-principal  = "appId" from Service Principle via "az ad sp create-for-rbac --skip-assignment"
+	• --client-secret = "password" from Service Principle via "az ad sp create-for-rbac --skip-assignment"
+	• --outbound-type = If set to userDefinedRouting, then a egress load balancer will not be created.  If this option is left out an external load balancer with a public IP will be created for egress traffic.  Note: the route-table for the subnet MUST has a default route.
+	• --enable-private-cluster = Creates a PE for API server in the VNet.
+    • --private-dns-zone = If set to "none" then only uses Azure public DNS for API server.  If set to "system" (the default setting) then creats a private DNS zone for API server record.
+
+az aks create \
+    --resource-group myResourceGroup \
+    --name myAKSCluster \
+    --node-count 3 \
+    --network-plugin kubenet \
+    --service-cidr 10.0.0.0/16 \
+    --dns-service-ip 10.0.0.10 \
+    --pod-cidr 10.244.0.0/16 \
+    --docker-bridge-address 172.17.0.1/16 \
+    --vnet-subnet-id <subnet_id> \
+    --service-principal <sp_appId> \
+    --client-secret <sp_password>
+    --generate-ssh-keys
+    --load-balancer-sku standard \
+    --outbound-type userDefinedRouting \
+    --enable-private-cluster \
+    --private-dns-zone none
